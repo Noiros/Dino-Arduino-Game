@@ -6,11 +6,12 @@ LiquidCrystal_I2C lcd(0x20, 16, 2);
 long world[15] = {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0};
 long time = 500;
 long jump_time = 1500;
-int cactus_spawn_lim = 5;
+int cactus_spawn_lim = 3;
+int lvl = 1;
 
 bool in_game = true;
 bool jump_pressed = false;
-long score = 0;
+long score = 1;
 long current_time = 0;
 long current_jump_time = 0;
 long tmp_scroll_catus_state = 0;
@@ -140,21 +141,20 @@ void loop() {
     
     //death
     if (!jumping && world[0] == 1) {
-      in_game = false;
+      //in_game = false;
     }
 
-    //scroll
+    //scroll ground
     lcd.setCursor(1, 1);
     for (int i = 1; i < 15; i++) {
       if (world[i] == 0) {
-        //lcd.print(0);
         lcd.write((byte)3);
       } else {
-        //lcd.print(1);
         lcd.write((byte)4);
       }
     }
 
+    //world
     if (millis()-current_time > time) {
       current_time = millis();
       for (int i = 0; i < 15; i++) {
@@ -164,7 +164,7 @@ void loop() {
       score += 1;
       tmp_scroll_catus_state += 1;
 
-      if (random(0, 10) == 0 && tmp_scroll_catus_state > cactus_spawn_lim) {
+      if (random(0, 5) == 0 && tmp_scroll_catus_state > cactus_spawn_lim) {
           world[14] = 1;
           tmp_scroll_catus_state = 0;
       } else {
@@ -172,18 +172,23 @@ void loop() {
       }
     }
 
-    //lcd.setCursor(0, 0);
-    //for (int i = 1; i < 15; i++) {
-    //  if (world[i] == 0) {
-    //    lcd.print(0);
-    //  } else {
-    //    lcd.print(1);
-    //  }
-    //}
-
     //show score
-    lcd.setCursor(10, 0);
+    lcd.setCursor(12, 0);
     lcd.print(String(score));
+
+  
+    //manage lvls
+    if (lvl != score/10) {
+      lvl = score/10;
+      //time -= 50;
+      
+      lcd.setCursor(5, 0);
+      lcd.print("lvl ");
+      lcd.print(lvl);
+      //lcd.write((byte)6);
+    }
+
+
   } else {
     lcd.setCursor(1, 0);
     lcd.print("You are so bad");
@@ -210,5 +215,6 @@ void loop() {
       lcd.setCursor(0, 0);
     }
   }
+
 
 }
