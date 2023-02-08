@@ -11,9 +11,9 @@ int cactus_spawn_lim = 5;
 bool in_game = true;
 bool jump_pressed = false;
 long score = 0;
-int current_time = 0;
-int current_jump_time = 0;
-int tmp_scroll_catus_state = 0;
+long current_time = 0;
+long current_jump_time = 0;
+long tmp_scroll_catus_state = 0;
 
 byte empty_char[8] = {
   0b00000,
@@ -65,6 +65,26 @@ byte dino_jump_char[8] = {
   0b01000,
   0b00000
 };
+byte dead_dino[8] = {
+  0b00000,
+  0b00000,
+  0b00000,
+  0b00000,
+  0b11111,
+  0b11101,
+  0b10100,
+  0b11111
+};
+byte skull[8] = {
+  0b00000,
+  0b01110,
+  0b11111,
+  0b10101,
+  0b11111,
+  0b01110,
+  0b01010,
+  0b00000
+};
 
 bool jumping = false;
 
@@ -79,6 +99,8 @@ void setup() {
   lcd.createChar(2, dino_jump_char);
   lcd.createChar(3, floor_char);
   lcd.createChar(4, cactus_char);
+  lcd.createChar(5, dead_dino);
+  lcd.createChar(6, skull);
 
   lcd.setCursor(0, 1);
   lcd.write((byte)1); //afficher le dino à gauche
@@ -116,20 +138,20 @@ void loop() {
       lcd.write((byte)0);
     }
     
-    //mort
+    //death
     if (!jumping && world[0] == 1) {
-      in_game = true;
+      in_game = false;
     }
 
     //scroll
     lcd.setCursor(1, 1);
     for (int i = 1; i < 15; i++) {
       if (world[i] == 0) {
-        lcd.print(0);
-        //lcd.write((byte)3);
+        //lcd.print(0);
+        lcd.write((byte)3);
       } else {
-        lcd.print(1);
-        //lcd.write((byte)4);
+        //lcd.print(1);
+        lcd.write((byte)4);
       }
     }
 
@@ -137,36 +159,56 @@ void loop() {
       current_time = millis();
       for (int i = 0; i < 15; i++) {
         world[i-1] = world[i];
-        //score += 1;
-        tmp_scroll_catus_state += 1;
-
-        if (random(0, 10) == 0 && tmp_scroll_catus_state > cactus_spawn_lim) {
-            world[14] = 1;
-            tmp_scroll_catus_state = 0;
-        } else {
-            world[14] = 0;
-        }
       }
-    }
 
-    lcd.setCursor(0, 0);
-    
-    for (int i = 1; i < 15; i++) {
-      if (world[i] == 0) {
-        lcd.print(0);
-        //lcd.write((byte)3);
+      score += 1;
+      tmp_scroll_catus_state += 1;
+
+      if (random(0, 10) == 0 && tmp_scroll_catus_state > cactus_spawn_lim) {
+          world[14] = 1;
+          tmp_scroll_catus_state = 0;
       } else {
-        lcd.print(1);
-        //lcd.write((byte)4);
+          world[14] = 0;
       }
     }
+
+    //lcd.setCursor(0, 0);
+    //for (int i = 1; i < 15; i++) {
+    //  if (world[i] == 0) {
+    //    lcd.print(0);
+    //  } else {
+    //    lcd.print(1);
+    //  }
+    //}
 
     //show score
     lcd.setCursor(10, 0);
-    //lcd.print(String(score));
+    lcd.print(String(score));
   } else {
     lcd.setCursor(1, 0);
     lcd.print("You are so bad");
+    lcd.write((byte)6);
+    
+    lcd.setCursor(0, 1);
+    lcd.write((byte)5);
+    lcd.setCursor(0, 0);
+    lcd.write((byte)6);
+
+    //restart
+    if (!digitalRead(7)) {
+      lcd.clear();
+      in_game = true;
+      score = 0;
+
+      lcd.setCursor(0, 1);
+      lcd.write((byte)1);
+      lcd.setCursor(0, 0);
+      lcd.write((byte)0);
+      for (int i = 0; i < 15; i++) {
+        world[i] = 0;
+      }
+      lcd.setCursor(0, 0);
+    }
   }
 
 }
